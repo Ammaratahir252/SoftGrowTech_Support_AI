@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SupportAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:         #ffffff;
+      --sidebar-bg: #f9f9f9;
+      --sidebar-w:  260px;
+      --ink:        #0d0d0d;
+      --ink2:       #555;
+      --ink3:       #999;
+      --border:     #e8e8e8;
+      --hover:      #f0f0f0;
+      --active:     #ebebeb;
+      --user-bg:    #f4f4f4;
+      --bot-bg:     #ffffff;
+      --accent:     #d97706;
+      --r:          12px;
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+    }
+
+    /* ── SIDEBAR ────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar-top {
+      padding: 16px 14px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-row {
+      display: flex; align-items: center; gap: 9px;
+      padding: 6px 8px; border-radius: 8px;
+      cursor: default;
+    }
+    .logo-icon {
+      width: 28px; height: 28px;
+      background: #000; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-icon svg { width: 15px; height: 15px; }
+    .logo-name { font-size: 15px; font-weight: 500; color: var(--ink); }
+
+    .new-chat-btn {
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; margin-top: 10px;
+      padding: 8px 10px; border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg); cursor: pointer;
+      font-size: 13.5px; font-family: 'Inter', sans-serif;
+      color: var(--ink2); transition: background .12s;
+    }
+    .new-chat-btn:hover { background: var(--hover); }
+    .new-chat-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .sidebar-section {
+      padding: 12px 14px 4px;
+    }
+    .section-lbl {
+      font-size: 11px; font-weight: 500;
+      color: var(--ink3); letter-spacing: .4px;
+      text-transform: uppercase; padding: 0 6px;
+      margin-bottom: 4px;
+    }
+
+    .topic-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 8px; border-radius: 7px;
+      cursor: pointer; font-size: 13.5px;
+      color: var(--ink2); transition: background .1s;
+      border: none; background: transparent;
+      font-family: 'Inter', sans-serif;
+      width: 100%; text-align: left;
+    }
+    .topic-item:hover  { background: var(--hover); color: var(--ink); }
+    .topic-item.active { background: var(--active); color: var(--ink); }
+    .ti-emoji { font-size: 14px; flex-shrink: 0; }
+    .ti-text  { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+    }
+    .sf-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 8px; border-radius: 7px;
+      cursor: pointer; transition: background .12s;
+    }
+    .sf-row:hover { background: var(--hover); }
+    .sf-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #111; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 500; flex-shrink: 0;
+    }
+    .sf-name { font-size: 13px; color: var(--ink); }
+
+    /* ── MAIN CHAT AREA ─────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* Top bar — minimal */
+    .chat-topbar {
+      height: 50px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .ct-title { font-size: 14px; font-weight: 500; color: var(--ink); }
+    .ct-right { display: flex; align-items: center; gap: 8px; }
+    .ct-badge {
+      font-size: 11px; color: var(--ink3);
+      background: var(--user-bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 10px;
+    }
+    .ct-clear {
+      font-size: 13px; color: var(--ink3);
+      background: transparent; border: none;
+      cursor: pointer; padding: 5px 8px; border-radius: 6px;
+      font-family: 'Inter', sans-serif; transition: background .12s;
+    }
+    .ct-clear:hover { background: var(--hover); color: var(--ink2); }
+
+    /* Messages */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 0;
+      scroll-behavior: smooth;
+    }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Welcome screen */
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 200px);
+      gap: 10px;
+      text-align: center;
+      padding: 20px;
+    }
+    .w-icon {
+      width: 44px; height: 44px;
+      background: #000; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 4px;
+    }
+    .w-icon svg { width: 22px; height: 22px; }
+    .w-title { font-size: 22px; font-weight: 500; color: var(--ink); letter-spacing: -.3px; }
+    .w-sub   { font-size: 14px; color: var(--ink3); font-weight: 300; max-width: 380px; line-height: 1.6; }
+
+    /* Suggestion cards — like Claude's */
+    .suggestion-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      max-width: 560px;
+      margin: 16px auto 0;
+      padding: 0 20px;
+      width: 100%;
+    }
+    .sug-card {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .12s, border-color .12s;
+      text-align: left;
+      background: var(--bg);
+    }
+    .sug-card:hover { background: var(--hover); border-color: #ddd; }
+    .sug-card-title { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+    .sug-card-sub   { font-size: 12.5px; color: var(--ink3); margin-top: 2px; font-weight: 300; }
+
+    /* Message rows */
+    .msg-group {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 6px 20px;
+      animation: msgIn .18s ease;
+    }
+    @keyframes msgIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    /* User message */
+    .user-msg {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 2px;
+    }
+    .user-bubble {
+      background: var(--user-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px 18px 4px 18px;
+      padding: 10px 16px;
+      max-width: 75%;
+      font-size: 14px;
+      color: var(--ink);
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    /* Bot message — like Claude: avatar + text, no bubble */
+    .bot-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 4px 0;
+    }
+    .bot-avatar {
+      width: 28px; height: 28px;
+      background: #000; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .bot-avatar svg { width: 14px; height: 14px; }
+    .bot-content { flex: 1; }
+    .bot-name {
+      font-size: 13px; font-weight: 500;
+      color: var(--ink); margin-bottom: 3px;
+    }
+    .bot-text {
+      font-size: 14px; color: var(--ink);
+      line-height: 1.75; font-weight: 300;
+    }
+    .bot-meta {
+      font-size: 11px; color: var(--ink3);
+      margin-top: 5px; display: flex; align-items: center; gap: 8px;
+    }
+    .intent-tag {
+      background: var(--user-bg); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 7px;
+      font-size: 10.5px; color: var(--ink3);
+    }
+
+    /* Typing indicator */
+    .typing-row {
+      display: flex; gap: 12px; align-items: flex-start;
+      max-width: 720px; margin: 0 auto; padding: 6px 20px;
+    }
+    .typing-dots {
+      display: flex; gap: 4px; align-items: center;
+      padding: 8px 0; margin-top: 4px;
+    }
+    .td {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--ink3);
+    }
+    .td:nth-child(1){animation:td .9s infinite .0s}
+    .td:nth-child(2){animation:td .9s infinite .18s}
+    .td:nth-child(3){animation:td .9s infinite .36s}
+    @keyframes td{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+    /* Quick replies */
+    .quick-wrap {
+      max-width: 720px;
+      margin: 6px auto 0;
+      padding: 0 20px 0 60px;
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .qr-btn {
+      padding: 5px 12px; font-size: 13px;
+      border: 1px solid var(--border); border-radius: 20px;
+      background: var(--bg); color: var(--ink2);
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all .12s; white-space: nowrap;
+    }
+    .qr-btn:hover { background: var(--hover); border-color: #ccc; color: var(--ink); }
+
+    /* Input area — Claude style */
+    .input-area {
+      padding: 12px 20px 16px;
+      flex-shrink: 0;
+    }
+    .input-box {
+      max-width: 720px;
+      margin: 0 auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px 12px 10px 16px;
+      transition: border-color .15s;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .input-box:focus-within {
+      border-color: #bbb;
+      box-shadow: 0 1px 8px rgba(0,0,0,.08);
+    }
+    #msgInput {
+      flex: 1; border: none; outline: none;
+      background: transparent; resize: none;
+      font-size: 14px; font-family: 'Inter', sans-serif;
+      color: var(--ink); line-height: 1.6;
+      max-height: 160px; font-weight: 300;
+      padding: 2px 0;
+    }
+    #msgInput::placeholder { color: var(--ink3); }
+    .send-btn {
+      width: 34px; height: 34px; flex-shrink: 0;
+      background: #000; border: none; border-radius: 8px;
+      cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      transition: opacity .15s; flex-shrink: 0;
+    }
+    .send-btn:hover:not(:disabled) { opacity: .78; }
+    .send-btn:disabled { opacity: .25; cursor: default; }
+    .send-btn svg { width: 15px; height: 15px; }
+
+    .input-hint {
+      text-align: center; font-size: 11.5px;
+      color: var(--ink3); margin-top: 8px;
+      max-width: 720px; margin-left: auto; margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg viewBox="0 0 15 15" fill="none">
+          <path d="M7.5 1.5C4.46 1.5 2 3.96 2 7.5S4.46 13.5 7.5 13.5 13 11.04 13 7.5 10.54 1.5 7.5 1.5z" stroke="#fff" stroke-width="1.2"/>
+          <path d="M5 7.5h5M5 9.5h3" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="logo-name">SupportAI</span>
+    </div>
+    <button class="new-chat-btn" onclick="clearChat()">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      New conversation
+    </button>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="section-lbl">Topics</div>
+    <button class="topic-item" onclick="sendQuick('Where is my order')">
+      <span class="ti-emoji"></span><span class="ti-text">Order tracking</span>
+    </button>
+    <button class="topic-item" onclick="sendQuick('How do I return an item')">
+      <span class="ti-emoji">↩</span><span class="ti-text">Returns & refunds</span>
+    </button>
+    <button class="topic-item" onclick="sendQuick('What payment methods do you accept')">
+      <span class="ti-emoji"></span><span class="ti-text">Payment</span>
+    </button>
+    <button class="topic-item" onclick="sendQuick('How long does shipping take')">
+      <span class="ti-emoji"></span><span class="ti-text">Shipping</span>
+    </button>
+    <button class="topic-item" onclick="sendQuick('I forgot my password')">
+      <span class="ti-emoji"></span><span class="ti-text">Account help</span>
+    </button>
+    <button class="topic-item" onclick="sendQuick('Do you have any discounts')">
+      <span class="ti-emoji"></span><span class="ti-text">Discounts & offers</span>
+    </button>
+    <button class="topic-item" onclick="sendQuick('Product warranty claim')">
+      <span class="ti-emoji"></span><span class="ti-text">Warranty</span>
+    </button>
+    <button class="topic-item" onclick="sendQuick('I want to speak to a human agent')">
+      <span class="ti-emoji"></span><span class="ti-text">Human support</span>
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sf-row">
+      <div class="sf-avatar">U</div>
+      <span class="sf-name">You</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CHAT -->
+<div class="main">
+
+  <div class="chat-topbar">
+    <span class="ct-title">SupportAI</span>
+    <div class="ct-right">
+      <button class="ct-clear" onclick="clearChat()">Clear</button>
+    </div>
+  </div>
+
+  <div class="messages" id="messages">
+    <!-- Welcome screen -->
+    <div class="welcome" id="welcomeScreen">
+      <div class="w-icon">
+        <svg viewBox="0 0 22 22" fill="none">
+          <path d="M11 2C6.03 2 2 5.8 2 10.5c0 2.2.9 4.2 2.4 5.67L3.5 20l3.6-1.4A9.5 9.5 0 0011 19c4.97 0 9-3.8 9-8.5S15.97 2 11 2z" stroke="#fff" stroke-width="1.3"/>
+          <path d="M7.5 10.5h7M7.5 13h4.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="w-title">How can I help you?</h1>
+      <p class="w-sub">Ask me about orders, returns, shipping, payments, or anything else. I'm here to help.</p>
+      <div class="suggestion-cards">
+        <div class="sug-card" onclick="sendQuick('Where is my order and when will it arrive')">
+          <div class="sug-card-title">Track my order</div>
+          <div class="sug-card-sub">Check status and delivery estimate</div>
+        </div>
+        <div class="sug-card" onclick="sendQuick('How do I return a product for a refund')">
+          <div class="sug-card-title">Return an item</div>
+          <div class="sug-card-sub">Start a return or get a refund</div>
+        </div>
+        <div class="sug-card" onclick="sendQuick('What are your shipping options and costs')">
+          <div class="sug-card-title">Shipping info</div>
+          <div class="sug-card-sub">Delivery times and pricing</div>
+        </div>
+        <div class="sug-card" onclick="sendQuick('Do you have any discount codes or offers')">
+          <div class="sug-card-title">Discounts & offers</div>
+          <div class="sug-card-sub">Promo codes and current deals</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="quickWrap" class="quick-wrap" style="display:none"></div>
+
+  <div class="input-area">
+    <div class="input-box">
+      <textarea id="msgInput" placeholder="Message SupportAI..." rows="1"
+        onkeydown="onKey(event)" oninput="resize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="send()" disabled>
+        <svg viewBox="0 0 15 15" fill="none">
+          <path d="M7.5 2v11M3 6.5l4.5-4.5 4.5 4.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="input-hint">SupportAI can make mistakes. For urgent issues, contact support directly.</div>
+  </div>
+</div>
+
+<script>
+  let msgCount = 0;
+
+  // Auto-resize textarea
+  function resize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+    document.getElementById('sendBtn').disabled = el.value.trim().length === 0;
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (document.getElementById('msgInput').value.trim()) send();
+    }
+  }
+
+  function esc(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  }
+
+  function scrollBottom() {
+    const m = document.getElementById('messages');
+    m.scrollTop = m.scrollHeight;
+  }
+
+  function hideWelcome() {
+    const w = document.getElementById('welcomeScreen');
+    if (w) w.remove();
+  }
+
+  function appendUser(text, time) {
+    hideWelcome();
+    const msgs = document.getElementById('messages');
+    const g = document.createElement('div');
+    g.className = 'msg-group';
+    g.innerHTML = `
+      <div class="user-msg">
+        <div class="user-bubble">${esc(text)}</div>
+      </div>`;
+    msgs.appendChild(g);
+    scrollBottom();
+  }
+
+  function showTyping() {
+    hideWelcome();
+    const msgs = document.getElementById('messages');
+    const row  = document.createElement('div');
+    row.className = 'typing-row'; row.id = 'typingRow';
+    row.innerHTML = `
+      <div class="bot-avatar">
+        <svg viewBox="0 0 15 15" fill="none">
+          <path d="M7.5 1.5C4.46 1.5 2 3.96 2 7.5S4.46 13.5 7.5 13.5 13 11.04 13 7.5 10.54 1.5 7.5 1.5z" stroke="#fff" stroke-width="1.2"/>
+          <path d="M5 7.5h5M5 9.5h3" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="typing-dots">
+        <div class="td"></div><div class="td"></div><div class="td"></div>
+      </div>`;
+    msgs.appendChild(row);
+    scrollBottom();
+  }
+
+  function hideTyping() {
+    const row = document.getElementById('typingRow');
+    if (row) row.remove();
+  }
+
+  function appendBot(text, tag, confidence, time) {
+    const msgs = document.getElementById('messages');
+    const g = document.createElement('div');
+    g.className = 'msg-group';
+    g.innerHTML = `
+      <div class="bot-row">
+        <div class="bot-avatar">
+          <svg viewBox="0 0 15 15" fill="none">
+            <path d="M7.5 1.5C4.46 1.5 2 3.96 2 7.5S4.46 13.5 7.5 13.5 13 11.04 13 7.5 10.54 1.5 7.5 1.5z" stroke="#fff" stroke-width="1.2"/>
+            <path d="M5 7.5h5M5 9.5h3" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="bot-content">
+          <div class="bot-name">SupportAI</div>
+          <div class="bot-text">${esc(text)}</div>
+          <div class="bot-meta">
+            <span>${time}</span>
+            <span class="intent-tag">${tag.replace(/_/g,' ')}</span>
+            <span>${confidence}% confidence</span>
+          </div>
+        </div>
+      </div>`;
+    msgs.appendChild(g);
+    scrollBottom();
+  }
+
+  function renderQuick(suggestions) {
+    const wrap = document.getElementById('quickWrap');
+    if (!suggestions || suggestions.length === 0) { wrap.style.display='none'; return; }
+    wrap.style.display = 'flex';
+    wrap.innerHTML = suggestions.map(s =>
+      `<button class="qr-btn" onclick="sendQuick('${s}')">${s}</button>`
+    ).join('');
+    scrollBottom();
+  }
+
+  async function send() {
+    const input = document.getElementById('msgInput');
+    const text  = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('sendBtn').disabled = true;
+    document.getElementById('quickWrap').style.display = 'none';
+
+    const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    appendUser(text, now);
+    msgCount++;
+
+    showTyping();
+    await new Promise(r => setTimeout(r, 500 + Math.random() * 600));
+
+    try {
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message: text})
+      });
+      const d = await r.json();
+      hideTyping();
+      const t2 = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      appendBot(d.response, d.tag, d.confidence, t2);
+      renderQuick(d.suggestions);
+    } catch(e) {
+      hideTyping();
+      const t2 = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      appendBot("Sorry, I'm having trouble connecting right now. Please try again.", 'error', 0, t2);
+    }
+
+    document.getElementById('sendBtn').disabled = false;
+    input.focus();
+  }
+
+  function sendQuick(text) {
+    document.getElementById('msgInput').value = text;
+    document.getElementById('sendBtn').disabled = false;
+    send();
+  }
+
+  async function clearChat() {
+    await fetch('/api/clear', {method:'POST'});
+    location.reload();
+  }
+
+  document.getElementById('msgInput').focus();
+</script>
+</body>
+</html>
