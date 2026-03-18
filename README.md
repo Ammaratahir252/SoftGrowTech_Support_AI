@@ -1,7 +1,5 @@
 # SupportAI — AI Chatbot for Customer Support
 
-**SoftGrowTech — AI Internship Final Project | Project 2**
-
 ---
 
 ## Project Requirements Covered
